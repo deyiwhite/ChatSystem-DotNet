@@ -50,8 +50,7 @@ ChatSystem/
 │   ├── ChatSystem.Core/       # 实体和枚举
 │   ├── ChatSystem.Server/     # Web 服务端、Razor Pages、API、SignalR
 │   └── ChatSystem.Desktop/    # WPF 桌面客户端
-├── README.md
-└── 提交清单.md
+└── README.md
 ```
 
 ## 环境要求
@@ -126,4 +125,4 @@ dotnet run --project src\ChatSystem.Desktop\ChatSystem.Desktop.csproj
 - 数据库结构参考：`Data/main.sql`
 - EF Core 迁移文件：`src/ChatSystem.Server/Data/Migrations/`
 
-`Data/chat.db` 属于本地运行数据，不建议提交到 GitHub。其他开发者克隆项目后直接运行服务端即可自动生成。
+`Data/chat.db` 属于本地运行数据，不随源码提供。克隆项目后直接运行服务端即可自动生成。
