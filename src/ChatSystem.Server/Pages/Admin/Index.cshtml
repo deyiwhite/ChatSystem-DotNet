@@ -1,0 +1,336 @@
+@page
+@model ChatSystem.Server.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "管理后台";
+}
+
+<style>
+    .admin-shell {
+        display: grid;
+        gap: 24px;
+        padding: 8px 0 32px;
+    }
+
+    .admin-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #c084fc 0%, #818cf8 55%, #60a5fa 100%);
+        box-shadow: 0 16px 40px rgba(120, 80, 200, 0.28);
+        padding: 36px 40px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .admin-hero::before {
+            content: '';
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            top: -80px;
+            right: -60px;
+            pointer-events: none;
+        }
+
+        .admin-hero::after {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            bottom: -50px;
+            left: 200px;
+            pointer-events: none;
+        }
+
+    .hero-left .eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.75);
+        margin-bottom: 10px;
+    }
+
+    .hero-left h1 {
+        font-size: 36px;
+        font-weight: 800;
+        color: white;
+        margin: 0 0 10px;
+    }
+
+    .hero-left p {
+        color: rgba(255,255,255,0.82);
+        margin: 0;
+        font-size: 15px;
+    }
+
+    .hero-right {
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.35);
+        border-radius: 18px;
+        padding: 20px 28px;
+        text-align: center;
+        backdrop-filter: blur(8px);
+        min-width: 160px;
+        position: relative;
+        z-index: 1;
+    }
+
+        .hero-right .label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.75);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .hero-right strong {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+        }
+
+    .stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .stat-card {
+        border-radius: 20px;
+        padding: 24px 26px;
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
+        box-shadow: 0 8px 24px rgba(120, 80, 200, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #e9d5ff, #c4b5fd);
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+        }
+
+        .stat-icon.pink {
+            background: linear-gradient(135deg, #fce7f3, #f9a8d4);
+        }
+
+    .stat-info .num {
+        font-size: 28px;
+        font-weight: 800;
+        color: #3b1f6e;
+        line-height: 1;
+    }
+
+    .stat-info .desc {
+        font-size: 13px;
+        color: #8b7aab;
+        margin-top: 4px;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    .action-card {
+        position: relative;
+        border-radius: 20px;
+        padding: 28px 26px;
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
+        box-shadow: 0 10px 28px rgba(120, 80, 200, 0.1);
+        text-decoration: none;
+        color: #3b1f6e;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .action-card.card-pending::before {
+            background: linear-gradient(90deg, #fbbf24, #f87171);
+        }
+
+        .action-card.card-users::before {
+            background: linear-gradient(90deg, #818cf8, #60a5fa);
+        }
+
+        .action-card.card-msgs::before {
+            background: linear-gradient(90deg, #34d399, #60a5fa);
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(120, 80, 200, 0.2);
+            color: #3b1f6e;
+        }
+
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .card-pending .action-icon {
+        background: linear-gradient(135deg, #fbbf24, #f87171);
+    }
+
+    .card-users .action-icon {
+        background: linear-gradient(135deg, #818cf8, #60a5fa);
+    }
+
+    .card-msgs .action-icon {
+        background: linear-gradient(135deg, #34d399, #60a5fa);
+    }
+
+    .action-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #9b7ec9;
+        margin-bottom: 2px;
+    }
+
+    .action-card strong {
+        font-size: 20px;
+        font-weight: 800;
+        display: block;
+    }
+
+    .action-card small {
+        font-size: 13px;
+        color: #8b7aab;
+        line-height: 1.55;
+    }
+
+    .action-arrow {
+        margin-top: auto;
+        font-size: 20px;
+        color: #c4b5fd;
+        align-self: flex-end;
+    }
+
+    @@media (max-width: 900px) {
+        .stat-row, .action-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .admin-hero {
+            flex-direction: column;
+        }
+
+        .stat-row, .action-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="admin-shell">
+    <div class="admin-hero">
+        <div class="hero-left">
+            <p class="eyebrow">Admin Console</p>
+            <h1>管理后台</h1>
+            <p>审核用户、管理账号与查看聊天记录。</p>
+        </div>
+        <div class="hero-right">
+            <span class="label">当前管理员</span>
+            <strong>@(User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name)</strong>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat-card">
+            <div class="stat-icon purple">⏳</div>
+            <div class="stat-info">
+                <div class="num">@Model.PendingUserCount</div>
+                <div class="desc">待审核注册申请</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">👤</div>
+            <div class="stat-info">
+                <div class="num">@Model.ActiveUserCount</div>
+                <div class="desc">当前活跃用户</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon pink">💬</div>
+            <div class="stat-info">
+                <div class="num">@Model.MessageCount</div>
+                <div class="desc">平台消息总数</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-grid">
+        <a class="action-card card-pending" asp-page="/Admin/PendingUsers">
+            <div class="action-icon">✓</div>
+            <span class="action-badge">@Model.PendingUserCount 个待处理</span>
+            <strong>待审核用户</strong>
+            <small>审批新注册用户，决定通过或拒绝。</small>
+            <span class="action-arrow">→</span>
+        </a>
+        <a class="action-card card-users" asp-page="/Admin/Users">
+            <div class="action-icon">◎</div>
+            <span class="action-badge">@Model.ActiveUserCount 个活跃</span>
+            <strong>用户管理</strong>
+            <small>查看普通用户状态，禁用或重新启用账号。</small>
+            <span class="action-arrow">→</span>
+        </a>
+        <a class="action-card card-msgs" asp-page="/Admin/Messages">
+            <div class="action-icon">▣</div>
+            <span class="action-badge">@Model.MessageCount 条消息</span>
+            <strong>消息管理</strong>
+            <small>检索聊天记录，执行管理员删除。</small>
+            <span class="action-arrow">→</span>
+        </a>
+    </div>
+</div>

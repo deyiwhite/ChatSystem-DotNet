@@ -1,0 +1,406 @@
+@page
+@model ChatSystem.Server.Pages.Admin.MessagesModel
+@{
+    ViewData["Title"] = "消息管理";
+}
+
+<div class="admin-heading">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>消息管理</h1>
+        <p class="muted mb-0">查询全部聊天消息，管理员删除后双方均不可见。</p>
+    </div>
+    <span class="count-pill">@Model.Messages.Count 条消息</span>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+
+<div style="display:flex; gap:10px; margin-bottom:16px;">
+    <a asp-page="/Admin/Messages" asp-all-route-data="@(new Dictionary<string, string> { { "MessageType", "private" }, { "Keyword", Model.Keyword ?? "" }, { "IncludeDeleted", Model.IncludeDeleted.ToString() } })"
+       class="btn @(Model.MessageType != "group" ? "btn-primary" : "btn-outline-secondary")" style="border-radius:999px;">
+        💬 私聊消息
+    </a>
+    <a asp-page="/Admin/Messages" asp-all-route-data="@(new Dictionary<string, string> { { "MessageType", "group" }, { "Keyword", Model.Keyword ?? "" }, { "IncludeDeleted", Model.IncludeDeleted.ToString() } })"
+       class="btn @(Model.MessageType == "group" ? "btn-primary" : "btn-outline-secondary")" style="border-radius:999px;">
+        👥 群聊消息
+    </a>
+</div>
+
+<form method="get" class="admin-message-filter">
+    <div>
+        <label asp-for="UserId" class="form-label">参与用户</label>
+        <input list="user-list" id="user-search" class="form-control"
+               placeholder="输入昵称或用户名搜索..."
+               value="@(Model.UserId.HasValue? Model.Users.FirstOrDefault(u => u.Id == Model.UserId)?.DisplayName + "（" + Model.Users.FirstOrDefault(u => u.Id == Model.UserId)?.Username + "）" : "")"
+               autocomplete="off" />
+        <input type="hidden" name="UserId" id="user-id-hidden" value="@Model.UserId" />
+        <datalist id="user-list">
+            <option data-id="" value="全部用户"></option>
+            @foreach (var user in Model.Users)
+            {
+                <option data-id="@user.Id" value="@user.DisplayName（@user.Username）"></option>
+            }
+        </datalist>
+    </div>
+    <div>
+        <label asp-for="Keyword" class="form-label"></label>
+        <input asp-for="Keyword" class="form-control" placeholder="内容、用户名或昵称" />
+    </div>
+    <div>
+        <label asp-for="StartDate" class="form-label"></label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+    </div>
+    <div>
+        <label asp-for="EndDate" class="form-label"></label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+    </div>
+    <div class="form-check filter-check">
+        <input asp-for="IncludeDeleted" class="form-check-input" />
+        <label asp-for="IncludeDeleted" class="form-check-label"></label>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary">查询</button>
+        <a class="btn btn-outline-secondary" asp-page="/Admin/Messages">重置</a>
+    </div>
+</form>
+
+@if (Model.Messages.Count == 0)
+{
+    <div class="empty-state">
+        <h2>暂无消息</h2>
+        <p>当前筛选条件下没有聊天记录。</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive panel-table">
+        <table class="table align-middle admin-message-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>发送方</th>
+                    <th>@(Model.MessageType == "group" ? "所在群组" : "接收方")</th>
+                    <th>内容</th>
+                    <th>发送时间</th>
+                    <th>状态</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var message in Model.Messages)
+                {
+                    <tr class="@(message.IsDeletedByAdmin ? "table-secondary" : string.Empty)">
+                        <td>@message.Id</td>
+                        <td>@message.FromName</td>
+                        <td>@message.ToName</td>
+                        <td class="message-content">@message.Content</td>
+                        <td>@message.SentAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>
+                            <div class="status-stack">
+                                @if (message.IsDeletedByAdmin)
+                                {
+                                    <span class="status-badge danger">管理员已删除</span>
+                                }
+                                @if (message.IsDeletedBySender)
+                                {
+                                    <span class="status-badge">发送方已隐藏</span>
+                                }
+                                @if (message.IsDeletedByReceiver)
+                                {
+                                    <span class="status-badge">接收方已隐藏</span>
+                                }
+                                @if (!message.IsDeletedByAdmin && !message.IsDeletedBySender && !message.IsDeletedByReceiver)
+                                {
+                                    <span class="status-badge ok">正常</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-end">
+                                @if (message.IsDeletedByAdmin)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled>已删除</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@message.Id">
+                                        <input type="hidden" asp-for="UserId" />
+                                        <input type="hidden" asp-for="Keyword" />
+                                        <input type="hidden" asp-for="StartDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" asp-for="EndDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" asp-for="IncludeDeleted" />
+                                        <input type="hidden" asp-for="MessageType" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">管理员删除</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<style>
+    .admin-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+        .admin-heading h1 {
+            margin: 0 0 8px;
+            font-weight: 750;
+            color: #3b1f6e;
+        }
+
+        .admin-heading .eyebrow {
+            color: #9b7ec9;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .admin-heading .muted {
+            color: #8b7aab;
+        }
+
+    .count-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(192, 132, 252, 0.3), rgba(96, 165, 250, 0.3));
+        color: #6b4ba0;
+        font-size: .85rem;
+        font-weight: 700;
+        padding: 6px 12px;
+    }
+
+    .admin-message-filter {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.1fr) minmax(180px, 1.2fr) minmax(140px, .75fr) minmax(140px, .75fr) auto auto;
+        gap: 14px;
+        align-items: end;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 16px 36px rgba(120, 80, 200, 0.18);
+        margin-bottom: 20px;
+        padding: 18px;
+    }
+
+        .admin-message-filter .form-label {
+            color: #3b1f6e;
+            font-weight: 600;
+            font-size: .88rem;
+        }
+
+        .admin-message-filter .form-control,
+        .admin-message-filter .form-select {
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.55);
+            color: #3b1f6e;
+        }
+
+            .admin-message-filter .form-control:focus,
+            .admin-message-filter .form-select:focus {
+                border-color: rgba(155, 110, 220, 0.6);
+                box-shadow: 0 0 0 .2rem rgba(155, 110, 220, 0.18);
+                background: rgba(255, 255, 255, 0.75);
+            }
+
+    .filter-check {
+        min-width: 160px;
+        padding-bottom: 8px;
+        color: #3b1f6e;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+        .filter-actions .btn-primary {
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            border: none;
+            border-radius: 999px;
+            font-weight: 700;
+            box-shadow: 0 6px 18px rgba(150, 100, 240, 0.35);
+        }
+
+            .filter-actions .btn-primary:hover {
+                background: linear-gradient(135deg, #b06ffa, #4d96f5);
+            }
+
+        .filter-actions .btn-outline-secondary {
+            border-color: rgba(155, 110, 220, 0.4);
+            color: #6b4ba0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+            .filter-actions .btn-outline-secondary:hover {
+                background: rgba(192, 132, 252, 0.2);
+                border-color: rgba(155, 110, 220, 0.6);
+            }
+
+    .empty-state,
+    .panel-table {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 16px 36px rgba(120, 80, 200, 0.18);
+    }
+
+    .panel-table {
+        padding: 8px;
+    }
+
+    .empty-state {
+        padding: 36px;
+    }
+
+        .empty-state h2 {
+            font-size: 1.25rem;
+            color: #3b1f6e;
+            margin: 0 0 8px;
+        }
+
+        .empty-state p {
+            color: #8b7aab;
+            margin: 0;
+        }
+
+    .panel-table table {
+        margin-bottom: 0;
+        color: #3b1f6e;
+    }
+
+    .panel-table thead th {
+        border-bottom: 1px solid rgba(192, 132, 252, 0.25);
+        color: #9b7ec9;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .panel-table tbody tr {
+        transition: background .15s ease;
+    }
+
+        .panel-table tbody tr:hover {
+            background: rgba(192, 132, 252, 0.1);
+        }
+
+    .panel-table td,
+    .panel-table th {
+        border-bottom-color: rgba(192, 132, 252, 0.15);
+    }
+
+    .message-content {
+        max-width: 360px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .status-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(192, 132, 252, 0.3), rgba(96, 165, 250, 0.3));
+        color: #6b4ba0;
+        font-size: .78rem;
+        font-weight: 700;
+        padding: 4px 10px;
+    }
+
+        .status-badge.danger {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.3), rgba(244, 114, 182, 0.3));
+            color: #d23a64;
+        }
+
+        .status-badge.ok {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(96, 165, 250, 0.3));
+            color: #1f9d6c;
+        }
+
+    .btn-outline-secondary {
+        border-color: rgba(155, 110, 220, 0.4);
+        color: #6b4ba0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-outline-danger {
+        border-color: rgba(251, 113, 133, 0.5);
+        color: #e0567a;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+        .btn-outline-danger:hover {
+            background: rgba(251, 113, 133, 0.15);
+            border-color: rgba(251, 113, 133, 0.7);
+            color: #d23a64;
+        }
+
+    @@media (max-width: 1180px) {
+        .admin-message-filter {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .admin-message-filter {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<script>
+    const searchInput = document.getElementById('user-search');
+    const hiddenInput = document.getElementById('user-id-hidden');
+    const dataList = document.getElementById('user-list');
+
+    searchInput.addEventListener('change', function () {
+        const val = this.value.trim();
+        if (!val || val === '全部用户') {
+            hiddenInput.value = '';
+            return;
+        }
+        const options = dataList.querySelectorAll('option');
+        let matched = null;
+        options.forEach(opt => {
+            if (opt.value === val) matched = opt;
+        });
+        hiddenInput.value = matched ? (matched.dataset.id || '') : '';
+    });
+
+    // 清空时重置
+    searchInput.addEventListener('input', function () {
+        if (this.value === '') hiddenInput.value = '';
+    });
+</script>

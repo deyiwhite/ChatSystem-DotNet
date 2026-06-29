@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ChatSystem</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ChatSystem.Server.styles.css" asp-append-version="true" />
+    <style>
+        .navbar .nav-link {
+            color: rgba(255, 255, 255, 0.88) !important;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 6px 14px !important;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+            .navbar .nav-link:hover {
+                background: rgba(255, 255, 255, 0.18);
+                color: #ffffff !important;
+            }
+
+        .navbar .navbar-text {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 600;
+        }
+
+        .navbar .btn-outline-secondary {
+            color: white;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+            .navbar .btn-outline-secondary:hover {
+                background: rgba(255, 255, 255, 0.28);
+                border-color: rgba(255, 255, 255, 0.7);
+                color: white;
+            }
+
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .navbar-toggler-icon {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light mb-3" style="background: linear-gradient(135deg, #c084fc 0%, #818cf8 50%, #60a5fa 100%); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.3) !important; box-shadow: 0 4px 20px rgba(120, 80, 200, 0.25); color: white;">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-page="/Index" style="color: white; font-weight: 700; font-size: 1.5rem;">
+                    <span style="font-size: 1.8rem; margin-right: 8px;">💬</span>
+                    ChatFlow
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                        aria-expanded="false" aria-label="切换导航">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="mainNavbar" class="navbar-collapse collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Admin/Index">后台首页</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Admin/PendingUsers">待审核用户</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Admin/Users">用户管理</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Admin/Messages">消息管理</a>
+                            </li>
+                        }
+                        else if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Index">主页</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/Friends">好友列表</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/Requests">好友申请</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/Chat">聊天</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/Groups">群组</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/GroupChat">群聊</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/User/History">历史消息</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav align-items-lg-center gap-lg-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <span class="navbar-text">@(User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name)</span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-page="/Account/Logout">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">退出</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/Account/Register" style="color: rgba(255,255,255,0.9);">注册</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm" asp-area="" asp-page="/Account/Login" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">登录</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted" style="border-top: 1px solid rgba(192, 132, 252, 0.25); background: linear-gradient(135deg, #f3eefc, #eef4fc);">
+        <div class="container text-center py-3" style="color: #8b7aab;">
+            © 2026 - ChatFlow · 智能聊天系统
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

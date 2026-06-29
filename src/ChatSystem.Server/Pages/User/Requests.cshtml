@@ -1,0 +1,215 @@
+@page
+@namespace ChatSystem.Server.Pages.UserPages
+@model ChatSystem.Server.Pages.UserPages.RequestsModel
+@{
+    ViewData["Title"] = "好友申请";
+}
+
+<div class="request-page">
+    <section class="request-hero">
+        <div>
+            <p class="section-kicker">Requests</p>
+            <h1>好友申请</h1>
+            <p>处理收到的 Pending 好友申请。同意后会写入双向好友关系。</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-page="/User/Friends">返回好友管理</a>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-info">@Model.StatusMessage</div>
+    }
+
+    <section class="request-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="section-kicker">Inbox</p>
+                <h2>收到的申请</h2>
+            </div>
+            <span class="state-chip">@Model.Requests.Count 条</span>
+        </div>
+
+        @if (Model.Requests.Count == 0)
+        {
+            <div class="quiet-box">当前没有待处理好友申请。</div>
+        }
+        else
+        {
+            <div class="request-list">
+                @foreach (var request in Model.Requests)
+                {
+                    <div class="request-row">
+                        <div>
+                            <strong>@request.FromDisplayName</strong>
+                            <span>@request.FromUsername</span>
+                            <small>申请时间：@request.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                        </div>
+                        <div class="actions">
+                            <form method="post" asp-page-handler="Accept" asp-route-id="@request.Id">
+                                <button type="submit" class="btn btn-sm btn-success">同意</button>
+                            </form>
+                            <form method="post" asp-page-handler="Reject" asp-route-id="@request.Id">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">拒绝</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<style>
+    .request-page {
+        display: grid;
+        gap: 20px;
+    }
+
+    .request-hero,
+    .request-panel {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 16px 36px rgba(120, 80, 200, 0.18);
+    }
+
+    .request-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 26px 28px;
+    }
+
+    .request-panel {
+        padding: 22px;
+    }
+
+        .request-hero h1,
+        .request-panel h2 {
+            margin: 0;
+            font-weight: 750;
+            color: #3b1f6e;
+        }
+
+    .request-hero p {
+        margin: 8px 0 0;
+        color: #8b7aab;
+    }
+
+    .request-hero .btn-outline-primary {
+        border-color: rgba(155, 110, 220, 0.5);
+        color: #6b4ba0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+        .request-hero .btn-outline-primary:hover {
+            background: rgba(192, 132, 252, 0.25);
+            border-color: rgba(155, 110, 220, 0.7);
+            color: #3b1f6e;
+        }
+
+    .section-kicker {
+        margin: 0 0 6px;
+        color: #9b7ec9;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .panel-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .state-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(192, 132, 252, 0.3), rgba(96, 165, 250, 0.3));
+        color: #6b4ba0;
+        font-size: .85rem;
+        font-weight: 700;
+        padding: 6px 12px;
+        white-space: nowrap;
+    }
+
+    .quiet-box,
+    .request-row {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.45);
+        padding: 14px;
+    }
+
+        .quiet-box,
+        .request-row span,
+        .request-row small {
+            color: #8b7aab;
+        }
+
+        .request-row strong {
+            color: #3b1f6e;
+        }
+
+    .request-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .request-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+        .request-row span,
+        .request-row small {
+            display: block;
+        }
+
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+        .actions .btn-success {
+            background: linear-gradient(135deg, #34d399, #60a5fa);
+            border: none;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+            .actions .btn-success:hover {
+                background: linear-gradient(135deg, #25c98c, #4d96f5);
+            }
+
+        .actions .btn-outline-danger {
+            border-color: rgba(251, 113, 133, 0.5);
+            color: #e0567a;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+            .actions .btn-outline-danger:hover {
+                background: rgba(251, 113, 133, 0.15);
+                border-color: rgba(251, 113, 133, 0.7);
+                color: #d23a64;
+            }
+
+    @@media (max-width: 768px) {
+        .request-hero,
+        .request-row {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+</style>

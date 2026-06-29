@@ -1,0 +1,560 @@
+@page
+@model ChatSystem.Server.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "登录";
+}
+
+<style>
+    .auth-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* 柔和粉紫蓝渐变，低饱和 */
+        background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 50%, #fbc2eb 100%);
+        position: relative;
+        overflow: hidden;
+        font-family: 'Nunito', 'Microsoft YaHei', 'PingFang SC', 'Segoe UI', sans-serif;
+    }
+
+        /* 柔和光晕装饰 */
+        .auth-shell::before, .auth-shell::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+        }
+
+        .auth-shell::before {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(224, 195, 252, 0.8) 0%, transparent 70%);
+            top: -150px;
+            left: -150px;
+        }
+
+        .auth-shell::after {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(142, 197, 252, 0.6) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+        }
+
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .blob-1 {
+        width: 350px;
+        height: 350px;
+        background: rgba(251, 194, 235, 0.5);
+        top: 40%;
+        left: 10%;
+    }
+
+    .blob-2 {
+        width: 300px;
+        height: 300px;
+        background: rgba(142, 197, 252, 0.4);
+        top: 10%;
+        right: 20%;
+    }
+
+    .heart-deco {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .heart-deco-1 {
+        left: 15%;
+        top: 75%;
+        font-size: 18px;
+    }
+
+    .heart-deco-2 {
+        right: 20%;
+        top: 25%;
+        font-size: 14px;
+    }
+
+    .heart-deco-3 {
+        left: 75%;
+        bottom: 15%;
+        font-size: 16px;
+    }
+
+    .auth-panel {
+        position: relative;
+        z-index: 10;
+        width: 420px;
+        padding: 48px 40px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+        overflow: hidden;
+    }
+
+    .eyebrow {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #a78bfa;
+        margin-bottom: 8px;
+    }
+
+    .auth-panel h1 {
+        text-align: center;
+        font-size: 32px;
+        font-weight: 800;
+        color: #8b5cf6;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #a5b4fc;
+        margin-bottom: 4px;
+    }
+
+    .muted {
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        margin-bottom: 28px;
+    }
+
+    .stacked-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 15px;
+        font-family: inherit;
+        color: #374151;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(167, 139, 250, 0.3);
+        border-radius: 12px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+        .form-control::placeholder {
+            color: #c4b5fd;
+        }
+
+        .form-control:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #6b7280;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .form-check-input {
+        width: 16px;
+        height: 16px;
+        accent-color: #a78bfa;
+        cursor: pointer;
+    }
+
+    .forgot-link {
+        color: #a78bfa;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+
+        .forgot-link:hover {
+            color: #8b5cf6;
+        }
+
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        font-family: inherit;
+        color: white;
+        background: linear-gradient(135deg, #c084fc 0%, #818cf8 100%);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(192, 132, 252, 0.3);
+    }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(192, 132, 252, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .auth-switch {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 14px;
+        color: #9ca3af;
+    }
+
+        .auth-switch a {
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+            .auth-switch a:hover {
+                color: #8b5cf6;
+            }
+
+    .admin-toggle-wrap {
+        text-align: center;
+        margin-top: 16px;
+    }
+
+    .admin-toggle {
+        display: inline-block;
+        font-size: 13px;
+        color: #9ca3af;
+        text-decoration: none;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.5);
+        transition: all 0.3s;
+        border: 1px solid rgba(167, 139, 250, 0.2);
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .admin-toggle:hover {
+            background: rgba(255, 255, 255, 0.8);
+            color: #8b5cf6;
+        }
+
+    .text-danger {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .alert-warning {
+        background: rgba(251, 191, 36, 0.15);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: #92400e;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .login-mode {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+        .login-mode.hidden {
+            display: none;
+        }
+
+    .mode-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+
+        .mode-badge.admin {
+            background: linear-gradient(135deg, #a78bfa, #6366f1);
+            color: white;
+        }
+
+    @@media (max-width: 480px) {
+        .auth-panel {
+            width: 90%;
+            padding: 36px 24px;
+        }
+
+            .auth-panel h1 {
+                font-size: 26px;
+            }
+    }
+</style>
+
+<div class="auth-shell">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="heart-deco heart-deco-1">💜</div>
+    <div class="heart-deco heart-deco-2">💖</div>
+    <div class="heart-deco heart-deco-3">💕</div>
+
+    <div class="auth-panel">
+        <div id="user-login-mode" class="login-mode">
+            <div class="eyebrow">Welcome Back</div>
+            <h1>ChatFlow</h1>
+            <div class="subtitle">网上沟通交流系统</div>
+            <p class="muted">登录您的账户以开始聊天，仅支持已激活的账户。</p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+            {
+                <div class="alert alert-warning">@Model.StatusMessage</div>
+            }
+
+            <form method="post" class="stacked-form" id="user-login-form">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div>
+                    <label asp-for="Input.Username" class="form-label">用户名</label>
+                    <input asp-for="Input.Username" class="form-control" autocomplete="username" placeholder="请输入用户名" />
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.Password" class="form-label">密码</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="请输入密码" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-options">
+                    <div class="form-check">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">记住我</label>
+                    </div>
+                    <a href="#" class="forgot-link">忘记密码？</a>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <span id="login-spinner" class="loading-spinner" style="display: none;"></span>
+                    <span id="login-text">登录</span>
+                </button>
+            </form>
+
+            <p class="auth-switch">新用户？<a asp-page="/Account/Register">注册账号</a></p>
+
+            <div class="admin-toggle-wrap">
+                <button type="button" class="admin-toggle" onclick="switchToAdmin()">
+                    👑 管理员登录
+                </button>
+            </div>
+        </div>
+
+        <div id="admin-login-mode" class="login-mode hidden">
+            <div class="mode-badge admin">👑 管理员模式</div>
+            <h1 style="font-size: 26px; margin-bottom: 8px;">管理后台</h1>
+            <p class="muted">请输入管理员账号和密码登录后台管理系统。</p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+            {
+                <div class="alert alert-warning">@Model.StatusMessage</div>
+            }
+
+            <form method="post" class="stacked-form" id="admin-login-form">
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" name="IsAdminLogin" value="true" />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div>
+                    <label asp-for="Input.Username" class="form-label">管理员账号</label>
+                    <input asp-for="Input.Username" class="form-control" autocomplete="username" placeholder="请输入管理员账号" />
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.Password" class="form-label">管理员密码</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="请输入管理员密码" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-options">
+                    <div class="form-check">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">记住我</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" style="background: linear-gradient(135deg, #a78bfa, #6366f1);">
+                    <span id="admin-spinner" class="loading-spinner" style="display: none;"></span>
+                    <span id="admin-login-text">管理员登录</span>
+                </button>
+            </form>
+
+            <div class="admin-toggle-wrap">
+                <button type="button" class="admin-toggle" onclick="switchToUser()">
+                    ← 返回普通用户登录
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const userMode = document.getElementById('user-login-mode');
+        const adminMode = document.getElementById('admin-login-mode');
+
+        function switchToAdmin() {
+            userMode.style.opacity = '0';
+            userMode.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                userMode.classList.add('hidden');
+                adminMode.classList.remove('hidden');
+                void adminMode.offsetWidth;
+                adminMode.style.opacity = '1';
+                adminMode.style.transform = 'translateY(0)';
+            }, 300);
+        }
+
+        function switchToUser() {
+            adminMode.style.opacity = '0';
+            adminMode.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                adminMode.classList.add('hidden');
+                userMode.classList.remove('hidden');
+                void userMode.offsetWidth;
+                userMode.style.opacity = '1';
+                userMode.style.transform = 'translateY(0)';
+            }, 300);
+        }
+
+        @if (Model.IsAdminLogin)
+        {
+                <text>
+                window.addEventListener('DOMContentLoaded', function() {
+                    userMode.classList.add('hidden');
+                    adminMode.classList.remove('hidden');
+                    adminMode.style.opacity = '1';
+                    adminMode.style.transform = 'translateY(0)';
+                });
+                </text>
+        }
+
+        document.getElementById('user-login-form')?.addEventListener('submit', function(e) {
+            const spinner = document.getElementById('login-spinner');
+            const loginText = document.getElementById('login-text');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (spinner && loginText) {
+                spinner.style.display = 'inline-block';
+                loginText.textContent = '登录中...';
+                submitBtn.disabled = true;
+            }
+        });
+
+        document.getElementById('admin-login-form')?.addEventListener('submit', function(e) {
+            const spinner = document.getElementById('admin-spinner');
+            const loginText = document.getElementById('admin-login-text');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (spinner && loginText) {
+                spinner.style.display = 'inline-block';
+                loginText.textContent = '验证中...';
+                submitBtn.disabled = true;
+            }
+        });
+
+        function showToast(message, type = 'error') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 14px 24px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 600;
+                color: white;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #06b6d4)' : 'linear-gradient(135deg, #ec4899, #ef4444)'};
+                box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                z-index: 9999;
+                animation: toastIn 0.4s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.4s ease forwards';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        const toastStyle = document.createElement('style');
+        toastStyle.textContent = `
+            @@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+            @@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+        `;
+        document.head.appendChild(toastStyle);
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const statusMessage = document.querySelector('.alert.alert-warning');
+            if (statusMessage && statusMessage.textContent.trim()) {
+                showToast(statusMessage.textContent.trim());
+                statusMessage.style.display = 'none';
+            }
+        });
+    </script>
+}

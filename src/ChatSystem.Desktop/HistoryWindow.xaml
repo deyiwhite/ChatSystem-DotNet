@@ -1,0 +1,366 @@
+<Window x:Class="ChatSystem.Desktop.HistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ChatSystem.Desktop"
+        Title="历史消息"
+        Width="1000"
+        Height="700"
+        MinWidth="900"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Microsoft YaHei UI">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="Background" Value="#A855F7" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="16,5" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#3B1F6E" />
+            <Setter Property="BorderBrush" Value="#E9D9FB" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="70" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#FB7185" />
+            <Setter Property="BorderBrush" Value="#FB7185" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TabButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="20,6" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#8B7AAB" />
+            <Setter Property="BorderBrush" Value="#E9D9FB" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TabButtonActiveStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource TabButtonStyle}">
+            <Setter Property="Background" Value="#A855F7" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#A855F7" />
+        </Style>
+
+        <Style x:Key="ListItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#F3EEFC">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- 标题 -->
+                <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E9D9FB" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="历史消息" FontSize="24" FontWeight="Bold" Foreground="#3B1F6E" />
+                            <TextBlock Text="查询你与好友的聊天记录，删除后仅对自己不可见" FontSize="14" Foreground="#8B7AAB" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="刷新" Style="{StaticResource SecondaryButtonStyle}" Click="RefreshButton_Click" />
+                    </Grid>
+                </Border>
+
+                <!-- Tab 切换 -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <Button x:Name="PrivateTabButton" Content="💬 私聊记录"
+                            Style="{StaticResource TabButtonActiveStyle}"
+                            Click="PrivateTabButton_Click" Margin="0,0,8,0" />
+                    <Button x:Name="GroupTabButton" Content="👥 群聊记录"
+                            Style="{StaticResource TabButtonStyle}"
+                            Click="GroupTabButton_Click" />
+                </StackPanel>
+
+                <!-- 筛选条件 -->
+                <Border Grid.Row="4" Background="#FFFFFF" BorderBrush="#E9D9FB" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="筛选条件" FontSize="18" FontWeight="SemiBold" Foreground="#3B1F6E" Margin="0,0,0,12" />
+
+                        <!-- 私聊筛选 -->
+                        <WrapPanel x:Name="PrivateFilterPanel" Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="好友：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <ComboBox x:Name="FriendComboBox" Width="180" Height="38"
+                                          SelectionChanged="FriendComboBox_SelectionChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="关键词：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <TextBox x:Name="KeywordTextBox" Width="160" Height="38" Padding="10,6"
+                                         BorderBrush="#E9D9FB" BorderThickness="1" Background="White"
+                                         VerticalContentAlignment="Center" KeyDown="KeywordTextBox_KeyDown" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="开始日期：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <DatePicker x:Name="StartDatePicker" Width="150" Height="38" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="结束日期：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <DatePicker x:Name="EndDatePicker" Width="150" Height="38" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="查询" Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="SearchButton_Click" Margin="0,0,8,0" />
+                                <Button Content="重置" Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="ResetButton_Click" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 群聊筛选 -->
+                        <WrapPanel x:Name="GroupFilterPanel" Orientation="Horizontal" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="群组：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <ComboBox x:Name="GroupComboBox" Width="180" Height="38"
+                                          SelectionChanged="GroupComboBox_SelectionChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="关键词：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <TextBox x:Name="GroupKeywordTextBox" Width="160" Height="38" Padding="10,6"
+                                         BorderBrush="#E9D9FB" BorderThickness="1" Background="White"
+                                         VerticalContentAlignment="Center" KeyDown="GroupKeywordTextBox_KeyDown" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="开始日期：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <DatePicker x:Name="GroupStartDatePicker" Width="150" Height="38" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,20,8" VerticalAlignment="Center">
+                                <TextBlock Text="结束日期：" VerticalAlignment="Center" Foreground="#3B1F6E" Margin="0,0,8,0" />
+                                <DatePicker x:Name="GroupEndDatePicker" Width="150" Height="38" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="查询" Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="GroupSearchButton_Click" Margin="0,0,8,0" />
+                                <Button Content="重置" Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="GroupResetButton_Click" />
+                            </StackPanel>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 消息列表 -->
+                <Border Grid.Row="6" Background="#FFFFFF" BorderBrush="#E9D9FB" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="消息记录" FontSize="18" FontWeight="SemiBold" Foreground="#3B1F6E" />
+                            <TextBlock x:Name="MessagesCountTextBlock" Text="0 条消息"
+                                       FontSize="13" Foreground="#8B7AAB" Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="MessagesEmptyPanel" Visibility="Visible"
+                                    HorizontalAlignment="Center" Margin="0,30">
+                            <TextBlock Text="🗂️" FontSize="48" Foreground="#E9D9FB" HorizontalAlignment="Center" />
+                            <TextBlock Text="当前没有消息记录，尝试调整筛选条件"
+                                       FontSize="14" Foreground="#8B7AAB" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="NoResultsTextBlock" Text="没有找到符合条件的消息"
+                                   Visibility="Collapsed" FontSize="14" Foreground="#8B7AAB"
+                                   HorizontalAlignment="Center" Margin="0,30" />
+
+                        <!-- 私聊列表 -->
+                        <ListBox x:Name="MessagesList"
+                                 ItemContainerStyle="{StaticResource ListItemStyle}"
+                                 Visibility="Collapsed" Background="Transparent" BorderThickness="0"
+                                 MaxHeight="400" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F8F6FD" BorderBrush="#E9D9FB" BorderThickness="1"
+                                            CornerRadius="12" Padding="16" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="#A855F7"
+                                                    Width="36" Height="36" CornerRadius="18" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding FromInitial}" FontSize="14" FontWeight="Bold"
+                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding FromName}" FontWeight="SemiBold" Foreground="#3B1F6E" />
+                                                    <TextBlock Text="{Binding ToName}" FontSize="12" Foreground="#8B7AAB"
+                                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding SentAtFormatted}" FontSize="11" Foreground="#8B7AAB" Margin="0,2,0,6" />
+                                                <TextBlock Text="{Binding Content}" FontSize="14" Foreground="#3B1F6E" TextWrapping="Wrap"
+                                                           Visibility="{Binding IsTextMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <Border Background="#F0F0F0" Padding="10" CornerRadius="8"
+                                                        Visibility="{Binding IsFileMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="📄" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" Foreground="#3B1F6E" />
+                                                            <TextBlock Text="{Binding FileSizeText}" FontSize="11" Foreground="#8B7AAB" />
+                                                        </StackPanel>
+                                                        <Button Content="下载" Margin="10,0,0,0" Padding="8,3"
+                                                                Background="#A855F7" Foreground="White" BorderThickness="0"
+                                                                VerticalAlignment="Center"
+                                                                Tag="{Binding DownloadUrl}" Click="DownloadButton_Click" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                            <Button Grid.Column="4" Content="删除记录"
+                                                    Style="{StaticResource DangerButtonStyle}"
+                                                    Tag="{Binding Id}" VerticalAlignment="Center"
+                                                    Click="DeleteMessageButton_Click" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- 群聊列表 -->
+                        <ListBox x:Name="GroupMessagesList"
+                                 ItemContainerStyle="{StaticResource ListItemStyle}"
+                                 Visibility="Collapsed" Background="Transparent" BorderThickness="0"
+                                 MaxHeight="400" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F8F6FD" BorderBrush="#E9D9FB" BorderThickness="1"
+                                            CornerRadius="12" Padding="16" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="12" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="#818CF8"
+                                                    Width="36" Height="36" CornerRadius="18" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding FromInitial}" FontSize="14" FontWeight="Bold"
+                                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding FromDisplayName}" FontWeight="SemiBold" Foreground="#3B1F6E" />
+                                                    <TextBlock Text="{Binding GroupName}" FontSize="12" Foreground="#8B7AAB"
+                                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding SentAtFormatted}" FontSize="11" Foreground="#8B7AAB" Margin="0,2,0,6" />
+                                                <TextBlock Text="{Binding Content}" FontSize="14" Foreground="#3B1F6E" TextWrapping="Wrap"
+                                                           Visibility="{Binding IsTextMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <Border Background="#F0F0F0" Padding="10" CornerRadius="8"
+                                                        Visibility="{Binding IsFileMessage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="📄" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" Foreground="#3B1F6E" />
+                                                            <TextBlock Text="{Binding FileSizeText}" FontSize="11" Foreground="#8B7AAB" />
+                                                        </StackPanel>
+                                                        <Button Content="下载" Margin="10,0,0,0" Padding="8,3"
+                                                                Background="#A855F7" Foreground="White" BorderThickness="0"
+                                                                VerticalAlignment="Center"
+                                                                Tag="{Binding DownloadUrl}" Click="DownloadButton_Click" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="4" Text="群聊消息不可删除"
+                                                       FontSize="11" Foreground="#C4B5FD" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                    </StackPanel>
+                </Border>
+
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>

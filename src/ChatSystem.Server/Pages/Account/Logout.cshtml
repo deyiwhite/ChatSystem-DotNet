@@ -1,0 +1,17 @@
+@page
+@model ChatSystem.Server.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "退出";
+}
+
+<div class="auth-shell">
+    <div class="auth-panel">
+        <p class="eyebrow">Sign out</p>
+        <h1>退出登录</h1>
+        <p class="muted">点击按钮后会清除当前 Web 登录状态。</p>
+
+        <form method="post" class="stacked-form">
+            <button type="submit" class="btn btn-primary w-100">确认退出</button>
+        </form>
+    </div>
+</div>

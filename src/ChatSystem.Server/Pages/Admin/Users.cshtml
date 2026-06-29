@@ -1,0 +1,244 @@
+@page
+@using ChatSystem.Core.Enums
+@model ChatSystem.Server.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "用户管理";
+}
+<div class="admin-heading">
+    <div>
+        <p class="eyebrow">Admin</p>
+        <h1>用户管理</h1>
+        <p class="muted mb-0">管理普通用户状态，禁用后用户无法登录网页端或桌面端。</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="/Admin/Index">返回后台首页</a>
+</div>
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+@if (Model.Users.Count == 0)
+{
+    <div class="empty-state">
+        <h2>暂无普通用户</h2>
+        <p>用户注册并通过审核后，会出现在这里。</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive panel-table">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>用户名</th>
+                    <th>昵称</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Username</td>
+                        <td>@user.DisplayName</td>
+                        <td>
+                            <span class="status-badge @GetStatusClass(user.Status)">@user.Status</span>
+                        </td>
+                        <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <div class="d-flex justify-content-end gap-2">
+                                @if (user.Status == UserStatus.Active)
+                                {
+                                    <form method="post" asp-page-handler="Ban" asp-route-id="@user.Id">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">禁用账号</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Activate" asp-route-id="@user.Id">
+                                        <button type="submit" class="btn btn-sm btn-success">启用账号</button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+@functions {
+    private static string GetStatusClass(UserStatus status)
+    {
+        return status switch
+        {
+            UserStatus.Active => "ok",
+            UserStatus.Banned => "danger",
+            UserStatus.Pending => "warning",
+            UserStatus.Rejected => "muted-badge",
+            _ => string.Empty
+        };
+    }
+}
+
+<style>
+    .admin-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+        .admin-heading h1 {
+            margin: 0 0 8px;
+            font-weight: 750;
+            color: #3b1f6e;
+        }
+
+        .admin-heading .eyebrow {
+            color: #9b7ec9;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .admin-heading .muted {
+            color: #8b7aab;
+        }
+
+        .admin-heading .btn-outline-secondary {
+            border-color: rgba(155, 110, 220, 0.4);
+            color: #6b4ba0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+            .admin-heading .btn-outline-secondary:hover {
+                background: rgba(192, 132, 252, 0.2);
+                border-color: rgba(155, 110, 220, 0.6);
+                color: #3b1f6e;
+            }
+
+    .empty-state,
+    .panel-table {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 16px 36px rgba(120, 80, 200, 0.18);
+    }
+
+    .panel-table {
+        padding: 8px;
+    }
+
+    .empty-state {
+        padding: 36px;
+    }
+
+        .empty-state h2 {
+            font-size: 1.25rem;
+            color: #3b1f6e;
+            margin: 0 0 8px;
+        }
+
+        .empty-state p {
+            color: #8b7aab;
+            margin: 0;
+        }
+
+    .panel-table table {
+        margin-bottom: 0;
+        color: #3b1f6e;
+    }
+
+    .panel-table thead th {
+        border-bottom: 1px solid rgba(192, 132, 252, 0.25);
+        color: #9b7ec9;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .panel-table tbody tr {
+        transition: background .15s ease;
+    }
+
+        .panel-table tbody tr:hover {
+            background: rgba(192, 132, 252, 0.1);
+        }
+
+    .panel-table td,
+    .panel-table th {
+        border-bottom-color: rgba(192, 132, 252, 0.15);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(192, 132, 252, 0.3), rgba(96, 165, 250, 0.3));
+        color: #6b4ba0;
+        font-size: .85rem;
+        font-weight: 700;
+        padding: 6px 12px;
+    }
+
+        .status-badge.ok {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(96, 165, 250, 0.3));
+            color: #1f9d6c;
+        }
+
+        .status-badge.danger {
+            background: linear-gradient(135deg, rgba(251, 113, 133, 0.3), rgba(244, 114, 182, 0.3));
+            color: #d23a64;
+        }
+
+        .status-badge.warning {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(248, 113, 113, 0.25));
+            color: #b5740a;
+        }
+
+        .status-badge.muted-badge {
+            background: rgba(139, 122, 171, 0.2);
+            color: #8b7aab;
+        }
+
+    .btn-success {
+        background: linear-gradient(135deg, #34d399, #60a5fa);
+        border: none;
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #25c98c, #4d96f5);
+        }
+
+    .btn-outline-danger {
+        border-color: rgba(251, 113, 133, 0.5);
+        color: #e0567a;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+        .btn-outline-danger:hover {
+            background: rgba(251, 113, 133, 0.15);
+            border-color: rgba(251, 113, 133, 0.7);
+            color: #d23a64;
+        }
+
+    @@media (max-width: 760px) {
+        .admin-heading {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+</style>

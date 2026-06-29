@@ -1,0 +1,46 @@
+# Build output
+bin/
+obj/
+bin_verify/
+publish/
+
+# Visual Studio / IDE local files
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.rsuser
+*.sln.docstates
+*.slnLaunch.user
+
+# NuGet local cache
+.nuget/packages/
+packages/
+
+# Runtime data generated locally
+Data/*.db
+Data/*.db-shm
+Data/*.db-wal
+src/**/wwwroot/uploads/
+src/**/desktop-settings.json
+
+# Reports and files that may contain private information
+*.docx
+*.pdf
+设计报告*.md
+PROJECT_HANDOFF.md
+chat_system_plan.md
+final_implementation_plan.md
+snazzy-strolling-ladybug.md
+convert_md_to_docx.ps1
+
+# Logs and temporary output
+*.log
+output/
+.server-pid.txt
+
+# Archives generated for handoff
+*.zip
+*.7z
+*.rar

@@ -1,0 +1,481 @@
+@page
+@namespace ChatSystem.Server.Pages.UserPages
+@model ChatSystem.Server.Pages.UserPages.HistoryModel
+@{
+    ViewData["Title"] = "历史消息";
+}
+
+@functions {
+    private static string FormatFileSize(long? size)
+    {
+        if (size is null || size <= 0)
+        {
+            return string.Empty;
+        }
+
+        double value = size.Value;
+        string[] units = { "B", "KB", "MB", "GB" };
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return $"{value:0.#} {units[unit]}";
+    }
+}
+
+<div class="history-heading">
+    <div>
+        <p class="eyebrow">History</p>
+        <h1>历史消息</h1>
+        <p class="muted mb-0">查询你与好友的聊天记录，删除后仅对自己不可见。</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="/User/Chat" asp-route-friendId="@Model.FriendId">返回聊天</a>
+</div>
+
+<div style="display:flex; gap:10px; margin-bottom:16px;">
+    <a asp-page="/User/History"
+       asp-route-MessageType="private"
+       asp-route-Keyword="@Model.Keyword"
+       class="btn @(Model.MessageType != "group" ? "btn-primary" : "btn-outline-secondary")"
+       style="border-radius:999px;">
+        💬 私聊记录
+    </a>
+    <a asp-page="/User/History"
+       asp-route-MessageType="group"
+       asp-route-Keyword="@Model.Keyword"
+       class="btn @(Model.MessageType == "group" ? "btn-primary" : "btn-outline-secondary")"
+       style="border-radius:999px;">
+        👥 群聊记录
+    </a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+
+<form method="get" class="history-filter">
+    <div>
+        @if (Model.MessageType == "group")
+        {
+            <label class="form-label">群组</label>
+            <select name="FriendId" class="form-select">
+                <option value="">全部群组</option>
+                @foreach (var group in Model.Groups)
+                {
+                    <option value="@group.Id" selected="@(Model.FriendId == group.Id)">@group.Name</option>
+                }
+            </select>
+        }
+        else
+        {
+            <label asp-for="FriendId" class="form-label"></label>
+            <select asp-for="FriendId" class="form-select">
+                <option value="">全部好友</option>
+                @foreach (var friend in Model.Friends)
+                {
+                    <option value="@friend.Id">@friend.DisplayName（@friend.Username）</option>
+                }
+            </select>
+        }
+    </div>
+    <div>
+        <label asp-for="Keyword" class="form-label"></label>
+        <input asp-for="Keyword" class="form-control" placeholder="按消息内容搜索" />
+    </div>
+    <div>
+        <label asp-for="StartDate" class="form-label"></label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+    </div>
+    <div>
+        <label asp-for="EndDate" class="form-label"></label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary">查询</button>
+        <a class="btn btn-outline-secondary" asp-page="/User/History">重置</a>
+    </div>
+    <input type="hidden" name="MessageType" value="@Model.MessageType" />
+</form>
+
+@if (Model.Messages.Count == 0)
+{
+    <div class="empty-state">
+        <h2>暂无历史消息</h2>
+        <p>换一个好友、关键词或日期范围再试试。</p>
+    </div>
+}
+else
+{
+    <div class="history-list">
+        @foreach (var message in Model.Messages)
+        {
+            <article class="history-item @(message.IsMine ? "mine" : "theirs")">
+                <div class="message-meta">
+                    <span class="history-avatar">@(message.FromName.Length > 0 ? message.FromName.Substring(0, 1) : "?")</span>
+                    <div class="message-meta-text">
+                        <strong>@message.FromName</strong>
+                        <span>发送给 @message.ToName</span>
+                        <time>@message.SentAt.ToString("yyyy-MM-dd HH:mm:ss")</time>
+                    </div>
+                </div>
+                @if (message.Type == 1)
+                {
+                    <p>
+                        <span class="file-tag">文件</span>
+                        <a href="@message.DownloadUrl" download>@message.FileName</a>
+                        <span class="muted">（@FormatFileSize(message.FileSize)）</span>
+                    </p>
+                }
+                else
+                {
+                    <p>@message.Content</p>
+                }
+                @if (message.CanDelete)
+{
+                    @if (message.CanDelete)
+                    {
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@message.Id">
+                            <input type="hidden" asp-for="FriendId" />
+                            <input type="hidden" asp-for="Keyword" />
+                            <input type="hidden" asp-for="StartDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" asp-for="EndDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" asp-for="MessageType" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">删除我的记录</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span style="font-size:12px; color:#8b7aab;">群聊消息不可删除</span>
+                    }
+}
+else
+{
+    <span style="font-size:12px; color:#8b7aab;">群聊消息不可删除</span>
+}
+            </article>
+        }
+    </div>
+    <div class="pagination-bar" id="pagination-bar"></div>
+}
+
+<style>
+    .history-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+        .history-heading h1 {
+            margin: 0 0 8px;
+            font-weight: 750;
+            color: #3b1f6e;
+        }
+
+        .history-heading .muted {
+            color: #8b7aab;
+        }
+
+        .history-heading .eyebrow {
+            color: #9b7ec9;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .history-heading .btn-outline-secondary {
+            border-color: rgba(155, 110, 220, 0.4);
+            color: #6b4ba0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+            .history-heading .btn-outline-secondary:hover {
+                background: rgba(192, 132, 252, 0.2);
+                border-color: rgba(155, 110, 220, 0.6);
+                color: #3b1f6e;
+            }
+
+    .history-filter {
+        display: grid;
+        grid-template-columns: minmax(170px, 1.1fr) minmax(180px, 1.3fr) minmax(145px, .8fr) minmax(145px, .8fr) auto;
+        gap: 14px;
+        align-items: end;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 16px 36px rgba(120, 80, 200, 0.18);
+        margin-bottom: 20px;
+        padding: 18px;
+    }
+
+        .history-filter .form-label {
+            color: #3b1f6e;
+            font-weight: 600;
+            font-size: .88rem;
+        }
+
+        .history-filter .form-control,
+        .history-filter .form-select {
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.55);
+            color: #3b1f6e;
+        }
+
+            .history-filter .form-control:focus,
+            .history-filter .form-select:focus {
+                border-color: rgba(155, 110, 220, 0.6);
+                box-shadow: 0 0 0 .2rem rgba(155, 110, 220, 0.18);
+                background: rgba(255, 255, 255, 0.75);
+            }
+
+    .filter-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+        .filter-actions .btn-primary {
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            border: none;
+            border-radius: 999px;
+            font-weight: 700;
+            box-shadow: 0 6px 18px rgba(150, 100, 240, 0.35);
+        }
+
+            .filter-actions .btn-primary:hover {
+                background: linear-gradient(135deg, #b06ffa, #4d96f5);
+            }
+
+        .filter-actions .btn-outline-secondary {
+            border-color: rgba(155, 110, 220, 0.4);
+            color: #6b4ba0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+            .filter-actions .btn-outline-secondary:hover {
+                background: rgba(192, 132, 252, 0.2);
+                border-color: rgba(155, 110, 220, 0.6);
+            }
+
+    .empty-state {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 36px;
+        text-align: center;
+    }
+
+        .empty-state h2 {
+            font-size: 1.25rem;
+            color: #3b1f6e;
+            margin: 0 0 8px;
+        }
+
+        .empty-state p {
+            color: #8b7aab;
+            margin: 0;
+        }
+
+    .history-list {
+        display: grid;
+        gap: 12px;
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+
+    .history-item {
+        display: grid;
+        grid-template-columns: minmax(180px, 280px) minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 10px 24px rgba(120, 80, 200, 0.12);
+        padding: 16px;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(120, 80, 200, 0.2);
+        }
+
+    .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .history-avatar {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        color: white;
+        background: linear-gradient(135deg, #f472b6, #c084fc);
+    }
+
+    .history-item.mine .history-avatar {
+        background: linear-gradient(135deg, #818cf8, #60a5fa);
+    }
+
+    .message-meta-text {
+        display: grid;
+        gap: 3px;
+        color: #8b7aab;
+        font-size: .9rem;
+        min-width: 0;
+    }
+
+        .message-meta-text strong {
+            color: #3b1f6e;
+        }
+
+    .history-item p {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        color: #3b1f6e;
+    }
+
+    .history-item .muted {
+        color: #8b7aab;
+    }
+
+    .history-item a {
+        color: #6b4ba0;
+        font-weight: 600;
+    }
+
+    .file-tag {
+        display: inline-block;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #a78bfa, #38bdf8);
+        color: white;
+        font-size: .72rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        margin-right: 6px;
+    }
+
+    .history-item .btn-outline-danger {
+        border-color: rgba(251, 113, 133, 0.5);
+        color: #e0567a;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+        .history-item .btn-outline-danger:hover {
+            background: rgba(251, 113, 133, 0.15);
+            border-color: rgba(251, 113, 133, 0.7);
+            color: #d23a64;
+        }
+
+    @@media (max-width: 980px) {
+        .history-heading,
+        .history-item {
+            align-items: stretch;
+        }
+
+        .history-heading,
+        .history-filter,
+        .history-item {
+            grid-template-columns: 1fr;
+        }
+
+        .history-heading {
+            display: grid;
+        }
+
+        .filter-actions {
+            flex-wrap: wrap;
+        }
+    }
+
+    .history-list {
+        max-height: none; /* 保持原样 */
+    }
+
+    .pagination-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(155, 110, 220, 0.4);
+        background: rgba(255,255,255,0.5);
+        color: #6b4ba0;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+        .page-btn:hover {
+            background: rgba(192, 132, 252, 0.2);
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #c084fc, #60a5fa);
+            color: white;
+            border-color: transparent;
+        }
+
+    .page-info {
+        color: #8b7aab;
+        font-size: 14px;
+    }
+</style>
+<script>
+    const PAGE_SIZE = 10;
+    const items = Array.from(document.querySelectorAll('.history-item'));
+    let currentPage = 1;
+    const totalPages = () => Math.ceil(items.length / PAGE_SIZE);
+
+    function showPage(page) {
+        currentPage = page;
+        items.forEach((item, i) => {
+            item.style.display = (i >= (page-1)*PAGE_SIZE && i < page*PAGE_SIZE) ? '' : 'none';
+        });
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const bar = document.getElementById('pagination-bar');
+        if (totalPages() <= 1) { bar.innerHTML = ''; return; }
+        let html = `<span class="page-info">共 ${items.length} 条，第 ${currentPage}/${totalPages()} 页</span>`;
+        if (currentPage > 1) html += `<button class="page-btn" onclick="showPage(${currentPage-1})">← 上一页</button>`;
+        for (let i = 1; i <= totalPages(); i++) {
+            html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="showPage(${i})">${i}</button>`;
+        }
+        if (currentPage < totalPages()) html += `<button class="page-btn" onclick="showPage(${currentPage+1})">下一页 →</button>`;
+        bar.innerHTML = html;
+    }
+
+    if (items.length > 0) showPage(1);
+</script>

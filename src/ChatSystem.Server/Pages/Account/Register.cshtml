@@ -1,0 +1,433 @@
+@page
+@model ChatSystem.Server.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "注册申请";
+}
+
+<style>
+    .auth-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 50%, #fbc2eb 100%);
+        position: relative;
+        overflow: hidden;
+        font-family: 'Nunito', 'Microsoft YaHei', 'PingFang SC', 'Segoe UI', sans-serif;
+    }
+
+        .auth-shell::before, .auth-shell::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+        }
+
+        .auth-shell::before {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(224, 195, 252, 0.8) 0%, transparent 70%);
+            top: -150px;
+            left: -150px;
+        }
+
+        .auth-shell::after {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(142, 197, 252, 0.6) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+        }
+
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .blob-1 {
+        width: 350px;
+        height: 350px;
+        background: rgba(251, 194, 235, 0.5);
+        top: 40%;
+        left: 10%;
+    }
+
+    .blob-2 {
+        width: 300px;
+        height: 300px;
+        background: rgba(142, 197, 252, 0.4);
+        top: 10%;
+        right: 20%;
+    }
+
+    .heart-deco {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .heart-deco-1 {
+        left: 15%;
+        top: 75%;
+        font-size: 18px;
+    }
+
+    .heart-deco-2 {
+        right: 20%;
+        top: 25%;
+        font-size: 14px;
+    }
+
+    .heart-deco-3 {
+        left: 75%;
+        bottom: 15%;
+        font-size: 16px;
+    }
+
+    .auth-panel {
+        position: relative;
+        z-index: 10;
+        width: 420px;
+        padding: 48px 40px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15);
+        overflow: hidden;
+    }
+
+    .eyebrow {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #a78bfa;
+        margin-bottom: 8px;
+    }
+
+    .auth-panel h1 {
+        text-align: center;
+        font-size: 32px;
+        font-weight: 800;
+        color: #8b5cf6;
+        margin-bottom: 8px;
+    }
+
+    .muted {
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        margin-bottom: 28px;
+        line-height: 1.5;
+    }
+
+    .stacked-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 15px;
+        font-family: inherit;
+        color: #374151;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(167, 139, 250, 0.3);
+        border-radius: 12px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+        .form-control::placeholder {
+            color: #c4b5fd;
+        }
+
+        .form-control:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        font-family: inherit;
+        color: white;
+        background: linear-gradient(135deg, #c084fc 0%, #818cf8 100%);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(192, 132, 252, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(192, 132, 252, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .auth-switch {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 14px;
+        color: #9ca3af;
+    }
+
+        .auth-switch a {
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+            .auth-switch a:hover {
+                color: #8b5cf6;
+            }
+
+    .text-danger {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #065f46;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .password-strength {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+        .password-strength.strength-weak {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .password-strength.strength-medium {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .password-strength.strength-strong {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+    @@media (max-width: 480px) {
+        .auth-panel {
+            width: 90%;
+            padding: 36px 24px;
+        }
+
+            .auth-panel h1 {
+                font-size: 26px;
+            }
+    }
+</style>
+
+<div class="auth-shell">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="heart-deco heart-deco-1">💜</div>
+    <div class="heart-deco heart-deco-2">💖</div>
+    <div class="heart-deco heart-deco-3">💕</div>
+
+    <div class="auth-panel">
+        <p class="eyebrow">Create Account</p>
+        <h1>Join ChatFlow</h1>
+        <p class="muted">填写信息后提交申请，管理员审核通过后会邮件通知您。</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+        {
+            <div class="alert alert-success">@Model.SuccessMessage</div>
+        }
+
+        <form method="post" class="stacked-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div>
+                <label asp-for="Input.DisplayName" class="form-label">真实姓名</label>
+                <input asp-for="Input.DisplayName" class="form-control" autocomplete="name" placeholder="请输入您的真实姓名" />
+                <span asp-validation-for="Input.DisplayName" class="text-danger"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Username" class="form-label">用户名</label>
+                <input asp-for="Input.Username" class="form-control" autocomplete="username" placeholder="请输入用户名（用于登录）" />
+                <span asp-validation-for="Input.Username" class="text-danger"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Password" class="form-label">密码</label>
+                <input asp-for="Input.Password" class="form-control" id="password-field" autocomplete="new-password" placeholder="请设置密码" />
+                <div id="password-strength" class="password-strength" style="display: none;"></div>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.ConfirmPassword" class="form-label">确认密码</label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" placeholder="请再次输入密码" />
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <span id="register-spinner" class="loading-spinner" style="display: none;"></span>
+                <span id="register-text">提交注册</span>
+            </button>
+        </form>
+
+        <p class="auth-switch">已有账号？<a asp-page="/Account/Login">去登录</a></p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const spinner = document.getElementById('register-spinner');
+            const registerText = document.getElementById('register-text');
+
+            if (spinner && registerText) {
+                spinner.style.display = 'inline-block';
+                registerText.textContent = '提交中...';
+
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+            }
+        });
+
+        const passwordField = document.getElementById('password-field');
+        const strengthDisplay = document.getElementById('password-strength');
+
+        if (passwordField && strengthDisplay) {
+            passwordField.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 'weak';
+                let message = '密码太弱';
+
+                if (password.length >= 8) {
+                    strength = 'medium';
+                    message = '密码强度中等';
+                }
+
+                if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[!@@#$%^&*]/.test(password)) {
+                    strength = 'strong';
+                    message = '密码强度高';
+                }
+
+                if (password.length === 0) {
+                    strengthDisplay.style.display = 'none';
+                } else {
+                    strengthDisplay.style.display = 'block';
+                    strengthDisplay.textContent = message;
+                    strengthDisplay.className = 'password-strength strength-' + strength;
+                }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 14px 24px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 600;
+                color: white;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #06b6d4)' : 'linear-gradient(135deg, #ec4899, #ef4444)'};
+                box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                z-index: 9999;
+                animation: toastIn 0.4s ease;
+                border: 1px solid rgba(255,255,255,0.3);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.4s ease forwards';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        const toastStyle = document.createElement('style');
+        toastStyle.textContent = `
+            @@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+            @@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+        `;
+        document.head.appendChild(toastStyle);
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const successMessage = document.querySelector('.alert.alert-success');
+            if (successMessage && successMessage.textContent.trim()) {
+                const message = successMessage.textContent.trim() || "注册已提交，等待管理员审核。审核通过后将邮件通知。";
+                showToast(message, 'success');
+                successMessage.style.display = 'none';
+            }
+        });
+    </script>
+}

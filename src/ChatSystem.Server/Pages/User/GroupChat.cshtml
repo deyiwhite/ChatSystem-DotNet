@@ -1,0 +1,856 @@
+@page
+@namespace ChatSystem.Server.Pages.UserPages
+@model ChatSystem.Server.Pages.UserPages.GroupChatModel
+@{
+    ViewData["Title"] = "群聊";
+}
+
+@functions {
+    private static string FormatFileSize(long? size)
+    {
+        if (size is null || size <= 0)
+        {
+            return string.Empty;
+        }
+
+        double value = size.Value;
+        string[] units = { "B", "KB", "MB", "GB" };
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return $"{value:0.#} {units[unit]}";
+    }
+}
+
+<div class="chat-shell" data-current-user-id="@Model.CurrentUserId" data-selected-group-id="@Model.SelectedGroup?.Id">
+    <aside class="chat-sidebar">
+        <div class="sidebar-heading">
+            <p class="chat-kicker">Groups</p>
+            <h1>群聊</h1>
+        </div>
+
+        @if (Model.Groups.Count == 0)
+        {
+            <div class="chat-empty">
+                <strong>暂无群聊</strong>
+                <span>先到群组管理页面创建或加入群聊。</span>
+                <a asp-page="/User/Groups">去管理群聊</a>
+            </div>
+        }
+        else
+        {
+            <div class="friend-picker">
+                @foreach (var group in Model.Groups)
+                {
+                    var activeClass = Model.SelectedGroup?.Id == group.Id ? "active" : string.Empty;
+                    <a class="friend-pill @activeClass" data-group-id="@group.Id" asp-page="/User/GroupChat" asp-route-groupId="@group.Id">
+                        <span class="friend-avatar">@(group.Name.Length > 0 ? group.Name.Substring(0, 1) : "群")</span>
+                        <span class="friend-text">
+                            <strong>@group.Name</strong>
+                            <span class="friend-username">@group.MemberCount 人</span>
+                        </span>
+                        <span class="web-unread-badge" hidden>0</span>
+                    </a>
+                }
+            </div>
+            <a class="btn btn-outline-secondary btn-sm manage-link" asp-page="/User/Groups">群组管理</a>
+        }
+    </aside>
+
+    <section class="chat-panel">
+        @if (Model.SelectedGroup is null)
+        {
+            <div class="no-chat">
+                <p class="chat-kicker">Group</p>
+                <h2>选择一个群聊开始交流</h2>
+                <p>群消息会实时追加到当前页面，不需要刷新。</p>
+            </div>
+        }
+        else
+        {
+            <header class="chat-header">
+                <div>
+                    <p class="chat-kicker">Group</p>
+                    <h2>@Model.SelectedGroup.Name</h2>
+                    <span>@Model.SelectedGroup.MemberCount 位成员</span>
+                </div>
+                <a class="btn btn-outline-secondary btn-sm" asp-page="/User/Groups">群组管理</a>
+            </header>
+
+            <div id="messageList" class="message-list" aria-live="polite">
+                @if (Model.Messages.Count == 0)
+                {
+                    <div id="emptyMessage" class="message-empty">还没有群消息，发出第一条吧。</div>
+                }
+                else
+                {
+                    foreach (var message in Model.Messages)
+                    {
+                        var mineClass = message.FromUserId == Model.CurrentUserId ? "mine" : "theirs";
+                        <div class="message-row @mineClass" data-from-user-id="@message.FromUserId">
+                            <div class="message-block">
+                                @if (message.FromUserId != Model.CurrentUserId)
+                                {
+                                    <span class="msg-sender">@message.FromDisplayName</span>
+                                }
+                                <div class="message-bubble">
+                                    @if (message.Type == 1)
+                                    {
+                                        <a class="file-card" href="@message.DownloadUrl" download>
+                                            <span class="file-icon">📄</span>
+                                            <span class="file-meta">
+                                                <span class="file-name">@message.FileName</span>
+                                                <span class="file-size">@FormatFileSize(message.FileSize) · 点击下载</span>
+                                            </span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <p>@message.Content</p>
+                                    }
+                                    <time>@message.SentAt.ToString("yyyy-MM-dd HH:mm:ss")</time>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <form id="sendForm" class="send-box">
+                <textarea id="messageInput" maxlength="1000" rows="2" placeholder="输入群消息..." autocomplete="off"></textarea>
+                <div class="send-actions">
+                    <input type="file" id="fileInput" hidden />
+                    <button id="attachButton" type="button" class="btn btn-outline-secondary">📎 文件</button>
+                    <button id="sendButton" type="submit" class="btn btn-primary">发送</button>
+                </div>
+            </form>
+            <div id="chatStatus" class="chat-status">正在连接...</div>
+        }
+    </section>
+</div>
+
+<style>
+    body {
+        margin-bottom: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, #c9b6f7 0%, #a8d8f0 50%, #f7c9e0 100%) !important;
+    }
+
+    footer {
+        display: none;
+    }
+
+    body > .container {
+        max-width: none;
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+
+    main[role="main"] {
+        padding-bottom: 0 !important;
+    }
+
+    .chat-shell {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        height: calc(100dvh - 128px);
+        max-height: calc(100dvh - 128px);
+        min-height: 0;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 25px 60px rgba(120, 80, 200, 0.3);
+        overflow: hidden;
+    }
+
+    .chat-sidebar {
+        border-right: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.32);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 22px;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .sidebar-heading {
+        margin-bottom: 18px;
+    }
+
+    .manage-link {
+        margin-top: 14px;
+        width: 100%;
+        border-color: rgba(155, 110, 220, 0.4);
+        color: #6b4ba0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+        .manage-link:hover {
+            background: rgba(192, 132, 252, 0.2);
+            border-color: rgba(155, 110, 220, 0.6);
+            color: #3b1f6e;
+        }
+
+    .chat-kicker {
+        margin: 0 0 6px;
+        color: #9b7ec9;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .chat-sidebar h1,
+    .chat-header h2,
+    .no-chat h2 {
+        margin: 0;
+        font-weight: 750;
+        color: #3b1f6e;
+    }
+
+    .friend-picker {
+        display: grid;
+        gap: 10px;
+    }
+
+    .friend-pill {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.5);
+        color: #3b1f6e;
+        padding: 10px 42px 10px 10px;
+        text-decoration: none;
+        transition: border-color .15s ease, transform .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+
+    .friend-avatar {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        color: white;
+        background: linear-gradient(135deg, #a78bfa, #38bdf8);
+    }
+
+    .friend-pill:nth-of-type(3n+2) .friend-avatar {
+        background: linear-gradient(135deg, #f472b6, #c084fc);
+    }
+
+    .friend-pill:nth-of-type(3n+3) .friend-avatar {
+        background: linear-gradient(135deg, #fbbf24, #f87171);
+    }
+
+    .friend-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+        .friend-text strong {
+            font-size: 13.5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+    .friend-pill:hover,
+    .friend-pill.active {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: linear-gradient(135deg, rgba(192, 132, 252, 0.35), rgba(96, 165, 250, 0.35));
+        color: #3b1f6e;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(150, 100, 230, 0.25);
+    }
+
+    .friend-pill.has-unread {
+        border-color: rgba(251, 113, 133, 0.6);
+        background: rgba(255, 228, 235, 0.6);
+    }
+
+    .web-unread-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f472b6, #fb7185);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 18px;
+        text-align: center;
+        padding: 0 5px;
+        box-shadow: 0 0 10px rgba(251, 113, 133, 0.6);
+    }
+
+        .web-unread-badge[hidden] {
+            display: none;
+        }
+
+    .friend-pill .friend-username,
+    .chat-header span,
+    .chat-empty span {
+        display: block;
+        color: #8b7aab;
+        font-size: .92rem;
+    }
+
+    .chat-empty,
+    .no-chat {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.45);
+        padding: 18px;
+        color: #3b1f6e;
+    }
+
+        .chat-empty a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #8b5fbf;
+            font-weight: 600;
+        }
+
+    .chat-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
+    }
+
+    .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 18px 22px;
+    }
+
+        .chat-header .btn-outline-secondary {
+            border-color: rgba(155, 110, 220, 0.4);
+            color: #6b4ba0;
+            border-radius: 999px;
+        }
+
+            .chat-header .btn-outline-secondary:hover {
+                background: rgba(192, 132, 252, 0.2);
+                border-color: rgba(155, 110, 220, 0.6);
+                color: #3b1f6e;
+            }
+
+    .message-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+        max-height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 22px;
+    }
+
+    .message-empty {
+        align-self: center;
+        border: 1px dashed rgba(155, 110, 220, 0.4);
+        border-radius: 16px;
+        color: #8b7aab;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .message-row {
+        display: flex;
+        animation: messageFadeIn .25s ease;
+    }
+
+    @@keyframes messageFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-row.mine {
+        justify-content: flex-end;
+    }
+
+    .message-row.theirs {
+        justify-content: flex-start;
+    }
+
+    .message-block {
+        display: flex;
+        flex-direction: column;
+        max-width: min(68%, 620px);
+    }
+
+    .msg-sender {
+        margin: 0 4px 4px;
+        color: #9b7ec9;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .message-bubble {
+        border-radius: 18px;
+        padding: 12px 16px;
+        box-shadow: 0 2px 10px rgba(120, 80, 200, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #3b1f6e;
+        border-bottom-left-radius: 6px;
+    }
+
+    .message-row.mine .message-bubble {
+        border: none;
+        background: linear-gradient(135deg, #c084fc, #818cf8);
+        color: white;
+        border-bottom-right-radius: 6px;
+        border-bottom-left-radius: 18px;
+    }
+
+    .message-bubble p {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .message-bubble time {
+        display: block;
+        margin-top: 6px;
+        color: #ab9ad0;
+        font-size: .78rem;
+    }
+
+    .message-row.mine .message-bubble time {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .file-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .file-card .file-icon {
+            font-size: 26px;
+            line-height: 1;
+        }
+
+        .file-card .file-meta {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .file-card .file-name {
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .file-card .file-size {
+            font-size: .78rem;
+            color: #8b7aab;
+        }
+
+    .message-row.mine .file-card .file-size {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .send-box {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: end;
+        flex-shrink: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 16px 22px;
+    }
+
+    .send-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .send-box textarea {
+        resize: none;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 16px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.55);
+        color: #3b1f6e;
+    }
+
+        .send-box textarea:focus {
+            border-color: rgba(155, 110, 220, 0.6);
+            box-shadow: 0 0 0 .2rem rgba(155, 110, 220, 0.18);
+            outline: none;
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+    .send-box .btn-outline-secondary {
+        border-color: rgba(155, 110, 220, 0.4);
+        color: #6b4ba0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+        .send-box .btn-outline-secondary:hover {
+            background: rgba(192, 132, 252, 0.2);
+            border-color: rgba(155, 110, 220, 0.6);
+        }
+
+    .send-box .btn-primary {
+        background: linear-gradient(135deg, #c084fc, #60a5fa);
+        border: none;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 6px 18px rgba(150, 100, 240, 0.4);
+    }
+
+        .send-box .btn-primary:hover {
+            background: linear-gradient(135deg, #b06ffa, #4d96f5);
+            box-shadow: 0 8px 22px rgba(150, 100, 240, 0.5);
+        }
+
+    .chat-status {
+        flex-shrink: 0;
+        min-height: 28px;
+        background: rgba(255, 255, 255, 0.15);
+        color: #8b7aab;
+        font-size: .85rem;
+        padding: 0 22px 10px;
+    }
+
+    @@media (max-width: 860px) {
+        .chat-shell {
+            grid-template-columns: 1fr;
+            height: calc(100dvh - 118px);
+            max-height: calc(100dvh - 118px);
+        }
+
+        .chat-sidebar {
+            border-right: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            max-height: 180px;
+        }
+
+        .message-block {
+            max-width: 88%;
+        }
+    }
+</style>
+
+@if (Model.SelectedGroup is not null)
+{
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@@8.0.7/dist/browser/signalr.min.js"></script>
+    <script>
+        (() => {
+            const shell = document.querySelector(".chat-shell");
+            const currentUserId = Number(shell.dataset.currentUserId);
+            const selectedGroupId = Number(shell.dataset.selectedGroupId);
+            const messageList = document.getElementById("messageList");
+            const emptyMessage = document.getElementById("emptyMessage");
+            const form = document.getElementById("sendForm");
+            const input = document.getElementById("messageInput");
+            const sendButton = document.getElementById("sendButton");
+            const attachButton = document.getElementById("attachButton");
+            const fileInput = document.getElementById("fileInput");
+            const status = document.getElementById("chatStatus");
+            const originalTitle = document.title;
+            const maxFileSize = 20 * 1024 * 1024;
+            let unreadTotal = 0;
+
+            const pick = (obj, name) => {
+                const upper = name.charAt(0).toUpperCase() + name.slice(1);
+                return obj[name] !== undefined ? obj[name] : obj[upper];
+            };
+
+            const formatTime = (value) => {
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) {
+                    return value;
+                }
+
+                const pad = number => String(number).padStart(2, "0");
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+            };
+
+            const formatSize = (size) => {
+                if (!size || size <= 0) {
+                    return "";
+                }
+
+                const units = ["B", "KB", "MB", "GB"];
+                let value = size;
+                let unit = 0;
+                while (value >= 1024 && unit < units.length - 1) {
+                    value /= 1024;
+                    unit++;
+                }
+
+                return `${value.toFixed(1)} ${units[unit]}`;
+            };
+
+            const scrollToBottom = () => {
+                messageList.scrollTop = messageList.scrollHeight;
+            };
+
+            const updateTitle = () => {
+                document.title = unreadTotal > 0 ? `(${unreadTotal}) ${originalTitle}` : originalTitle;
+            };
+
+            const markGroupUnread = (groupId) => {
+                const link = document.querySelector(`.friend-pill[data-group-id="${groupId}"]`);
+                if (!link || link.classList.contains("active")) {
+                    return;
+                }
+
+                const badge = link.querySelector(".web-unread-badge");
+                if (!badge) {
+                    return;
+                }
+
+                const nextCount = Number(link.dataset.unreadCount ?? "0") + 1;
+                link.dataset.unreadCount = String(nextCount);
+                badge.textContent = nextCount > 99 ? "99+" : String(nextCount);
+                badge.hidden = false;
+                link.classList.add("has-unread");
+                unreadTotal += 1;
+                updateTitle();
+            };
+
+            const buildBubbleContent = (bubble, type, content, fileName, fileSize, downloadUrl) => {
+                if (Number(type) === 1 && downloadUrl) {
+                    const card = document.createElement("a");
+                    card.className = "file-card";
+                    card.href = downloadUrl;
+                    card.setAttribute("download", "");
+
+                    const icon = document.createElement("span");
+                    icon.className = "file-icon";
+                    icon.textContent = "📄";
+
+                    const meta = document.createElement("span");
+                    meta.className = "file-meta";
+
+                    const nameEl = document.createElement("span");
+                    nameEl.className = "file-name";
+                    nameEl.textContent = fileName || content;
+
+                    const sizeEl = document.createElement("span");
+                    sizeEl.className = "file-size";
+                    sizeEl.textContent = `${formatSize(fileSize)} · 点击下载`;
+
+                    meta.append(nameEl, sizeEl);
+                    card.append(icon, meta);
+                    bubble.appendChild(card);
+                    return;
+                }
+
+                const text = document.createElement("p");
+                text.textContent = content;
+                bubble.appendChild(text);
+            };
+
+            const appendMessage = (fromUserId, senderName, type, content, fileName, fileSize, downloadUrl, sentAt) => {
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+
+                const isMine = fromUserId === currentUserId;
+                const row = document.createElement("div");
+                row.className = `message-row ${isMine ? "mine" : "theirs"}`;
+                row.dataset.fromUserId = String(fromUserId);
+
+                const block = document.createElement("div");
+                block.className = "message-block";
+
+                if (!isMine) {
+                    const sender = document.createElement("span");
+                    sender.className = "msg-sender";
+                    sender.textContent = senderName || `用户 ${fromUserId}`;
+                    block.appendChild(sender);
+                }
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                buildBubbleContent(bubble, type, content, fileName, fileSize, downloadUrl);
+
+                const time = document.createElement("time");
+                time.textContent = formatTime(sentAt);
+                bubble.appendChild(time);
+
+                block.appendChild(bubble);
+                row.appendChild(block);
+                messageList.appendChild(row);
+                scrollToBottom();
+            };
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveGroupMessage", (payload) => {
+                const groupId = Number(pick(payload, "groupId"));
+                const fromUserId = Number(pick(payload, "fromUserId"));
+                const senderName = pick(payload, "fromDisplayName");
+                const type = pick(payload, "type");
+                const content = pick(payload, "content");
+                const fileName = pick(payload, "fileName");
+                const fileSize = pick(payload, "fileSize");
+                const downloadUrl = pick(payload, "downloadUrl");
+                const sentAt = pick(payload, "sentAt");
+
+                if (groupId === selectedGroupId) {
+                    appendMessage(fromUserId, senderName, type, content, fileName, fileSize, downloadUrl, sentAt);
+                    status.textContent = "收到新消息。";
+                    return;
+                }
+
+                markGroupUnread(groupId);
+                status.textContent = "其他群聊有新消息，左侧已标记红点。";
+            });
+
+            connection.onreconnecting(() => {
+                status.textContent = "连接中断，正在重连...";
+                sendButton.disabled = true;
+            });
+
+            connection.onreconnected(() => {
+                status.textContent = "已重新连接。";
+                sendButton.disabled = false;
+            });
+
+            connection.onclose(() => {
+                status.textContent = "连接已断开，请刷新页面重试。";
+                sendButton.disabled = true;
+            });
+
+            form.addEventListener("submit", async event => {
+                event.preventDefault();
+
+                const content = input.value.trim();
+                if (!content) {
+                    status.textContent = "消息内容不能为空。";
+                    return;
+                }
+
+                sendButton.disabled = true;
+                try {
+                    await connection.invoke("SendGroupMessage", selectedGroupId, content);
+                    input.value = "";
+                    status.textContent = "消息已发送。";
+                } catch (error) {
+                    status.textContent = error?.message ?? "发送失败。";
+                } finally {
+                    sendButton.disabled = false;
+                    input.focus();
+                }
+            });
+
+            input.addEventListener("keydown", event => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
+
+            attachButton.addEventListener("click", () => fileInput.click());
+
+            fileInput.addEventListener("change", async () => {
+                const file = fileInput.files && fileInput.files[0];
+                if (!file) {
+                    return;
+                }
+
+                if (file.size > maxFileSize) {
+                    status.textContent = "文件超过 20 MB 上限。";
+                    fileInput.value = "";
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append("groupId", String(selectedGroupId));
+                formData.append("file", file);
+
+                attachButton.disabled = true;
+                status.textContent = "正在上传文件...";
+                try {
+                    const response = await fetch("/api/files/group", {
+                        method: "POST",
+                        body: formData,
+                        credentials: "same-origin"
+                    });
+
+                    if (!response.ok) {
+                        let message = "文件发送失败。";
+                        try {
+                            const error = await response.json();
+                            message = error.message ?? message;
+                        } catch (_) { /* ignore */ }
+                        status.textContent = message;
+                        return;
+                    }
+
+                    status.textContent = "文件已发送。";
+                } catch (error) {
+                    status.textContent = "文件发送失败，请检查网络。";
+                } finally {
+                    attachButton.disabled = false;
+                    fileInput.value = "";
+                }
+            });
+
+            scrollToBottom();
+            connection.start()
+                .then(() => {
+                    status.textContent = "已连接，可以发送群消息或文件。";
+                    input.focus();
+                })
+                .catch(error => {
+                    status.textContent = error?.message ?? "连接失败。";
+                    sendButton.disabled = true;
+                });
+        })();
+    </script>
+}

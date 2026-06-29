@@ -1,0 +1,758 @@
+<Window x:Class="ChatSystem.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ChatSystem Desktop"
+        Width="1040"
+        Height="720"
+        MinWidth="920"
+        MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing"
+        FontFamily="Microsoft YaHei UI">
+    <Window.Resources>
+        <!-- 千禧风色彩方案 -->
+        <LinearGradientBrush x:Key="PrimaryGradientBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#C084FC" Offset="0" />
+            <GradientStop Color="#818CF8" Offset="0.5" />
+            <GradientStop Color="#60A5FA" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#A855F7" />
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#9333EA" />
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#3B1F6E" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8B7AAB" />
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#F3EEFC" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#E9D9FB" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FB7185" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#34D399" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24" />
+
+        <!-- 旧的颜色定义向后兼容 -->
+        <SolidColorBrush x:Key="PageBrush" Color="#F3EEFC" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="LineBrush" Color="#E9D9FB" />
+        <SolidColorBrush x:Key="InkBrush" Color="#3B1F6E" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#8B7AAB" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#A855F7" />
+        <SolidColorBrush x:Key="OldErrorBrush" Color="#FB7185" />
+
+        <!-- 新增：磨砂玻璃面板 -->
+        <SolidColorBrush x:Key="GlassBrush" Color="#F2FFFFFF" />
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#80FFFFFF" />
+
+        <!-- 新增：消息气泡颜色 -->
+        <LinearGradientBrush x:Key="MineBubbleBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#C084FC" Offset="0" />
+            <GradientStop Color="#818CF8" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="MineBubbleBorderBrush" Color="#A855F7" />
+        <SolidColorBrush x:Key="MineTextBrush" Color="White" />
+        <SolidColorBrush x:Key="MineMetaBrush" Color="#E9D9FB" />
+        <SolidColorBrush x:Key="OtherBubbleBrush" Color="White" />
+        <SolidColorBrush x:Key="OtherBubbleBorderBrush" Color="#E9D9FB" />
+        <SolidColorBrush x:Key="OtherTextBrush" Color="#3B1F6E" />
+        <SolidColorBrush x:Key="OtherMetaBrush" Color="#8B7AAB" />
+
+        <Style x:Key="InputStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="16,5" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="SmallButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="FriendItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border Name="Border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{StaticResource LineBrush}"
+                        BorderThickness="0"
+                        CornerRadius="12"
+                        Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#E9D9FB" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#C084FC" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#F3EEFC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RequestItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        
+        <!-- TabControl 样式 -->
+        <Style x:Key="GlassTabControl" TargetType="{x:Type TabControl}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <!-- TabItem 样式 -->
+        <Style x:Key="GlassTabItem" TargetType="{x:Type TabItem}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Border Name="Border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{StaticResource LineBrush}"
+                            BorderThickness="0,0,0,2"
+                            Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#C9B6F7" Offset="0" />
+                <GradientStop Color="#A8D8F0" Offset="0.5" />
+                <GradientStop Color="#F7C9E0" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid x:Name="LoginView">
+            <!-- 登录界面保持已改好的样式 -->
+            <Border Width="450"
+                Padding="40"
+                Background="#F2FFFFFF"
+                BorderBrush="#80FFFFFF"
+                BorderThickness="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                CornerRadius="24">
+                <Border.Effect>
+                    <DropShadowEffect Color="#9061CE" Direction="270" ShadowDepth="8" BlurRadius="40" Opacity="0.35" />
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Logo 和标题 -->
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
+                        <TextBlock Text="ChatFlow"
+                            FontSize="32"
+                            FontWeight="Bold"
+                            Foreground="#A855F7"
+                            TextAlignment="Center" />
+                        <TextBlock Text="桌面客户端"
+                           FontSize="14"
+                           Foreground="#6B7280"
+                           TextAlignment="Center"
+                           Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <!-- 登录表单描述 -->
+                    <TextBlock Text="登录您的账户"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="#1F2937"
+                           Margin="0,0,0,4" />
+                    <TextBlock Text="请填写以下信息以继续"
+                           FontSize="12"
+                           Foreground="#6B7280"
+                           Margin="0,0,0,24" />
+
+                    <TextBlock Text="服务器地址" Foreground="#374151" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBox x:Name="ServerUrlTextBox"
+                         Height="42"
+                         Padding="12"
+                         BorderBrush="#E9D9FB"
+                         BorderThickness="2"
+                         Background="White"
+                         VerticalContentAlignment="Center"
+                         FontSize="14"
+                         Text="http://127.0.0.1:5098"
+                         Margin="0,0,0,16" />
+
+                    <TextBlock Text="用户名" Foreground="#374151" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBox x:Name="UsernameTextBox"
+                         Height="42"
+                         Padding="12"
+                         BorderBrush="#E9D9FB"
+                         BorderThickness="2"
+                         Background="White"
+                         VerticalContentAlignment="Center"
+                         FontSize="14"
+                         Text="user1"
+                         Margin="0,0,0,16" />
+
+                    <TextBlock Text="密码" Foreground="#374151" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <Grid Margin="0,0,0,16">
+                        <PasswordBox x:Name="PasswordBox"
+                             Height="42"
+                             Padding="12"
+                             BorderBrush="#E9D9FB"
+                             BorderThickness="2"
+                             Background="White"
+                             VerticalContentAlignment="Center"
+                             KeyDown="PasswordBox_KeyDown"
+                             PasswordChanged="PasswordBox_PasswordChanged"
+                             FontSize="14" />
+                        <TextBox x:Name="VisiblePasswordTextBox"
+                             Height="42"
+                             Padding="12"
+                             BorderBrush="#E9D9FB"
+                             BorderThickness="2"
+                             Background="White"
+                             VerticalContentAlignment="Center"
+                             FontSize="14"
+                             Visibility="Collapsed"
+                             KeyDown="VisiblePasswordTextBox_KeyDown"
+                             TextChanged="VisiblePasswordTextBox_TextChanged" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="RememberUserCheckBox"
+                                  Content="记住用户"
+                                  VerticalAlignment="Center"
+                                  Foreground="#374151"
+                                  Margin="0,0,16,0" />
+                            <CheckBox x:Name="ShowPasswordCheckBox"
+                                  Content="显示密码"
+                                  VerticalAlignment="Center"
+                                  Foreground="#374151"
+                                  Checked="ShowPasswordCheckBox_Changed"
+                                  Unchecked="ShowPasswordCheckBox_Changed" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1"
+                               Text="忘记密码？"
+                               Foreground="#A855F7"
+                               VerticalAlignment="Center"
+                               Cursor="Hand"
+                               MouseDown="ForgotPassword_Click" />
+                    </Grid>
+
+                    <Button x:Name="LoginButton"
+                        Height="44"
+                        Background="{StaticResource PrimaryGradientBrush}"
+                        Foreground="White"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        BorderThickness="0"
+                        BorderBrush="Transparent"
+                        Padding="20,0"
+                        Content="登录"
+                        Cursor="Hand"
+                        Click="LoginButton_Click" />
+
+                    <TextBlock Text="没有账号？"
+                           Foreground="#6B7280"
+                           FontSize="14"
+                           TextAlignment="Center"
+                           Margin="0,16,0,0" />
+
+                    <Button x:Name="RegisterLink"
+                        Content="立即注册"
+                        Background="Transparent"
+                        Foreground="#A855F7"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        BorderThickness="0"
+                        Padding="0"
+                        Cursor="Hand"
+                        Click="RegisterLink_Click" />
+
+                    <TextBlock x:Name="LoginStatusTextBlock"
+                           Text="请先启动服务端，然后登录系统。"
+                           TextWrapping="Wrap"
+                           Foreground="#6B7280"
+                           FontSize="12"
+                           TextAlignment="Center"
+                           Margin="0,12,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="ChatView" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="72" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="32" />
+            </Grid.RowDefinitions>
+
+            <!-- 顶部标题栏：磨砂玻璃 -->
+            <Border Grid.Row="0" 
+                Background="{StaticResource GlassBrush}" 
+                BorderBrush="{StaticResource GlassBorderBrush}" 
+                BorderThickness="0,0,0,1">
+                <Border.Effect>
+                    <DropShadowEffect Color="#9061CE" Direction="270" ShadowDepth="4" BlurRadius="20" Opacity="0.15" />
+                </Border.Effect>
+                <Grid Margin="28,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="ChatSystem" FontSize="24" FontWeight="Bold" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Text="WPF 桌面端" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="CurrentUserTextBlock"
+                               Text="未登录"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource InkBrush}"
+                               Margin="0,0,16,0" />
+                        <TextBlock x:Name="ConnectionTextBlock"
+                               Text="未连接"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource MutedBrush}"
+                               Margin="0,0,16,0" />
+                        <Button x:Name="FriendManagementButton"
+                            Content="好友管理"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="FriendManagementButton_Click"
+                            Margin="0,0,8,0" />
+                        <Button x:Name="HistoryButton"
+                            Content="历史消息"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="HistoryButton_Click"
+                            Margin="0,0,8,0" />
+                        <Button x:Name="LogoutButton"
+                            Content="退出登录"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="LogoutButton_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="28">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧面板：磨砂玻璃 -->
+                <Border Grid.Column="0"
+                    Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#9061CE" Direction="270" ShadowDepth="6" BlurRadius="30" Opacity="0.2" />
+                    </Border.Effect>
+                    <Grid Margin="18">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="好友申请"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource InkBrush}" />
+                                <TextBlock x:Name="RequestsCountTextBlock"
+                                       Text="0 条待处理"
+                                       FontSize="12"
+                                       Foreground="{StaticResource MutedBrush}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                Content="刷新"
+                                Style="{StaticResource SmallButtonStyle}"
+                                Click="RefreshRequestsButton_Click" />
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <TextBlock x:Name="FriendRequestsEmptyTextBlock"
+                                   Text="暂无待处理申请"
+                                   Foreground="{StaticResource MutedBrush}"
+                                   FontSize="13"
+                                   Margin="0,4,0,0" />
+                            <ListBox x:Name="FriendRequestsList"
+                                 MaxHeight="150"
+                                 ItemContainerStyle="{StaticResource RequestItemStyle}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding FromDisplayName}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource InkBrush}" />
+                                            <TextBlock Text="{Binding FromUsername}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource MutedBrush}" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                                <Button Content="同意"
+                                                    Tag="{Binding Id}"
+                                                    Style="{StaticResource SmallButtonStyle}"
+                                                    Click="AcceptRequestButton_Click"
+                                                    Margin="0,0,8,0" />
+                                                <Button Content="拒绝"
+                                                    Tag="{Binding Id}"
+                                                    Style="{StaticResource SmallButtonStyle}"
+                                                    Click="RejectRequestButton_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+
+                        <TabControl Grid.Row="3" 
+                                    Style="{StaticResource GlassTabControl}"
+                                    BorderThickness="0" 
+                                    Background="Transparent">
+                            <TabItem Header="好友" Style="{StaticResource GlassTabItem}">
+                                <ListBox x:Name="FriendsList"
+                                     ItemContainerStyle="{StaticResource FriendItemStyle}"
+                                     SelectionChanged="FriendsList_SelectionChanged"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Margin="0,10,0,0"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource InkBrush}" />
+                                                    <TextBlock Text="{Binding Username}"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource MutedBrush}" />
+                                                </StackPanel>
+                                                <Border Grid.Column="1"
+                                                    MinWidth="18"
+                                                    Height="18"
+                                                    Padding="5,0"
+                                                    CornerRadius="9"
+                                                    Background="{StaticResource ErrorBrush}"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding UnreadVisibility}">
+                                                    <TextBlock Text="{Binding UnreadBadge}"
+                                                           Foreground="White"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </TabItem>
+                            <TabItem Header="群聊" Style="{StaticResource GlassTabItem}">
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <Button x:Name="NewGroupButton"
+                                            Content="新建群聊"
+                                            Style="{StaticResource SmallButtonStyle}"
+                                            Click="NewGroupButton_Click"
+                                            Margin="0,0,8,0" />
+                                        <Button x:Name="RefreshGroupsButton"
+                                            Content="刷新"
+                                            Style="{StaticResource SmallButtonStyle}"
+                                            Click="RefreshGroupsButton_Click" />
+                                    </StackPanel>
+                                    <ListBox x:Name="GroupsList"
+                                         Grid.Row="1"
+                                         ItemContainerStyle="{StaticResource FriendItemStyle}"
+                                         SelectionChanged="GroupsList_SelectionChanged"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource InkBrush}" />
+                                                        <TextBlock Text="{Binding SubtitleText}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource MutedBrush}" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1"
+                                                        MinWidth="18"
+                                                        Height="18"
+                                                        Padding="5,0"
+                                                        CornerRadius="9"
+                                                        Background="{StaticResource ErrorBrush}"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="{Binding UnreadVisibility}">
+                                                        <TextBlock Text="{Binding UnreadBadge}"
+                                                               Foreground="White"
+                                                               FontSize="10"
+                                                               FontWeight="SemiBold"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+                </Border>
+
+                <!-- 右侧聊天面板：磨砂玻璃 -->
+                <Border Grid.Column="2"
+                    Background="{StaticResource GlassBrush}"
+                    BorderBrush="{StaticResource GlassBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#9061CE" Direction="270" ShadowDepth="6" BlurRadius="30" Opacity="0.2" />
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="74" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,0,0,1">
+                            <Grid Margin="20,12" MinHeight="40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="SelectedFriendTextBlock"
+                                           Text="请选择好友或群聊"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkBrush}" />
+                                    <TextBlock x:Name="ConversationSubtitle"
+                                           Text="消息会实时同步到 Web 端和桌面端"
+                                           FontSize="12"
+                                           Foreground="{StaticResource MutedBrush}" />
+                                </StackPanel>
+                                <StackPanel x:Name="GroupActionsPanel"
+                                        Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed">
+                                    <ComboBox x:Name="AddMemberComboBox"
+                                          Width="150"
+                                          Height="28"
+                                          VerticalContentAlignment="Center"
+                                          Margin="0,0,8,0" />
+                                    <Button x:Name="AddMemberButton"
+                                        Content="添加成员"
+                                        Style="{StaticResource SmallButtonStyle}"
+                                        Click="AddMemberButton_Click"
+                                        Margin="0,0,8,0" />
+                                    <Button x:Name="LeaveOrDisbandButton"
+                                        Content="退出群聊"
+                                        Style="{StaticResource SmallButtonStyle}"
+                                        Click="LeaveOrDisbandButton_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <ListBox x:Name="MessagesList"
+                             Grid.Row="1"
+                             BorderThickness="0"
+                             Background="#40FFF9F0"
+                             Padding="18"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="{x:Type ListBoxItem}">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,0,10" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Border HorizontalAlignment="{Binding BubbleAlignment}"
+                                            MaxWidth="520"
+                                            Background="{Binding BubbleBrush}"
+                                            BorderBrush="{Binding BubbleBorderBrush}"
+                                            BorderThickness="1"
+                                            Padding="12,10"
+                                            CornerRadius="16">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding SenderName}"
+                                                       FontSize="12"
+                                                       Foreground="{Binding MetaBrush}" />
+                                                <TextBlock Text="{Binding Content}"
+                                                       Margin="0,4,0,6"
+                                                       TextWrapping="Wrap"
+                                                       FontSize="15"
+                                                       Foreground="{Binding TextBrush}"
+                                                       Visibility="{Binding TextVisibility}" />
+                                                <Border Visibility="{Binding FileVisibility}"
+                                                    Margin="0,4,0,6"
+                                                    Padding="8"
+                                                    CornerRadius="12"
+                                                    Background="#22000000">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="📄"
+                                                               FontSize="22"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,8,0" />
+                                                        <StackPanel VerticalAlignment="Center" MaxWidth="280">
+                                                            <TextBlock Text="{Binding FileName}"
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap"
+                                                                   Foreground="{Binding TextBrush}" />
+                                                            <TextBlock Text="{Binding FileSizeText}"
+                                                                   FontSize="11"
+                                                                   Foreground="{Binding MetaBrush}" />
+                                                        </StackPanel>
+                                                        <Button Content="下载"
+                                                            Margin="10,0,0,0"
+                                                            Padding="10,3"
+                                                            VerticalAlignment="Center"
+                                                            Cursor="Hand"
+                                                            Tag="{Binding}"
+                                                            Click="DownloadFileButton_Click" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <TextBlock Text="{Binding SentAtText}"
+                                                       HorizontalAlignment="Right"
+                                                       FontSize="11"
+                                                       Foreground="{Binding MetaBrush}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border Grid.Row="2" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="0,1,0,0" Background="{StaticResource GlassBrush}">
+                            <Grid Margin="18,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="90" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="MessageTextBox"
+                                     Style="{StaticResource InputStyle}"
+                                     KeyDown="MessageTextBox_KeyDown"
+                                     VerticalContentAlignment="Center" />
+                                <Button x:Name="AttachFileButton"
+                                    Grid.Column="2"
+                                    Content="📎 文件"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Height="38"
+                                    Click="AttachFileButton_Click"
+                                    IsEnabled="False" />
+                                <Button x:Name="SendButton"
+                                    Grid.Column="4"
+                                    Content="发送"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="SendButton_Click"
+                                    IsEnabled="False" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 底部状态栏：磨砂玻璃 -->
+            <Border Grid.Row="2" 
+                Background="{StaticResource GlassBrush}" 
+                BorderBrush="{StaticResource GlassBorderBrush}" 
+                BorderThickness="0,1,0,0">
+                <TextBlock x:Name="StatusTextBlock"
+                       Text="已进入聊天。"
+                       Margin="28,0"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource MutedBrush}"
+                       FontSize="12" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
